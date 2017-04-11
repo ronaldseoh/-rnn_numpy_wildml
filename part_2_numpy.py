@@ -3,6 +3,8 @@ import csv
 import nltk
 import itertools
 import numpy as np
+import datetime
+import sys
 from rnn_numpy import RNNNumpy
 
 vocabulary_size = 8000
@@ -74,3 +76,31 @@ np.random.seed(10)
 model = RNNNumpy(vocabulary_size)
 
 model.numpy_sgd_step(X_train[10], y_train[10], 0.005)
+
+np.random.seed(10)
+# Train on a small subset of the data to see what happens
+model = RNNNumpy(vocabulary_size)
+
+def train_with_sgd(model, X_train, y_train, learning_rate=0.005, nepoch=100, evaluate_loss_after=5):
+    losses = []
+    num_examples_seen = 0
+
+    for epoch in range(nepoch):
+        if (epoch % evaluate_loss_after == 0):
+            loss = model.calculate_loss(X_train, y_train)
+            losses.append((num_examples_seen, loss))
+            time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%s')
+
+            print("%s: Loss after num_examples_seen=%d epoch=%d: %f" % (time, num_examples_seen, epoch, loss))
+
+            if (len(losses) > 1 and losses[-1][1] > [-2][1]):
+                learning_rate = learning_rate * 0.5
+                print("Setting learning rate to %f" % learning_rate)
+
+            sys.stdout.flush()
+
+        for i in range(len(y_train)):
+            model.numpy_sgd_step(X_train[i], y_train[i], learning_rate)
+            num_examples_seen += 1
+
+losses = train_with_sgd(model, X_train[:100], y_train[:100], nepoch=10, evaluate_loss_after=1)
