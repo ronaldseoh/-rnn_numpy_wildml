@@ -37,10 +37,11 @@ class RNNNumpy:
 
     def forward_propagation(self, x):
 
-        T = len(x)
+        T = len(x) # This would be (length of the word - 1), where every one of x provides output
 
         # hidden states
-        # this isn't the one that gets trained
+        # this isn't the one that gets trained; just calculated
+        # based on the trained U and W
         s = np.zeros((T+1, self.hidden_dim)) # +1 for the last state
 
         # the last state initialized with zeros 
@@ -55,7 +56,7 @@ class RNNNumpy:
             # state for each word
             s[t] = np.tanh(
                 # The column of U that covers the word number x[t]
-                # (applies to all the training examples)
+                # (applies to all the training sentences(examples))
                 self.U[:, x[t]] # (hidden_dim, 1)
 
                 # Weight given to previous state
