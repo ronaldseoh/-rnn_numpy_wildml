@@ -70,3 +70,7 @@ np.random.seed(10)
 model = RNNNumpy(grad_check_vocab_size, 10, bptt_truncate=1000)
 model.gradient_check([0,1,2,3], [1,2,3,4])
 
+np.random.seed(10)
+model = RNNNumpy(vocabulary_size)
+
+model.numpy_sgd_step(X_train[10], y_train[10], 0.005)
