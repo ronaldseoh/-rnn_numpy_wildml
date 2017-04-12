@@ -17,6 +17,8 @@ class RNNNumpy:
         self.hidden_dim = hidden_dim
         self.bptt_truncate = bptt_truncate
 
+        # U is the weight matrix for words
+        # Each column will be picked for hidden state calculation
         self.U = np.random.uniform(
                         - np.sqrt(1./word_dim),
                         np.sqrt(1./word_dim),
@@ -44,7 +46,7 @@ class RNNNumpy:
         # based on the trained U and W
         s = np.zeros((T+1, self.hidden_dim)) # +1 for the last state
 
-        # the last state initialized with zeros 
+        # the last state initialized with zeros
         # to calculate the first hidden state
         s[-1] = np.zeros(self.hidden_dim)
 
@@ -86,7 +88,7 @@ class RNNNumpy:
             correct_word_predictions = o[
                 # we can't use ':' here because we are now cherry-picking
                 # the probability assigned to correct answers for each word slot
-                # We use integer array indexing, not slicing 
+                # We use integer array indexing, not slicing
                 # Check out http://cs231n.github.io/python-numpy-tutorial/
                 np.arange(len(y[t])) # From 0 to (len(y[i]) - 1) = # of words
                 ,y[t] # this isn't scalar; one sentence
@@ -174,7 +176,7 @@ class RNNNumpy:
                 it.iternext()
 
             print("Gradient check for parameter %s passed." % (pname))
-			
+
     def numpy_sgd_step(self, x, y, learning_rate):
         dLdU, dLdV, dLdW = self.bptt(x, y)
 

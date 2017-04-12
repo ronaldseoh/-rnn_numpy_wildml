@@ -1,4 +1,3 @@
-import theano
 import csv
 import nltk
 import itertools
@@ -34,7 +33,7 @@ print("Parsed %d sentences." % (len(sentences)))
 tokenized_sentences = [nltk.word_tokenize(sent) for sent in sentences]
 
 # Mash up all the word list from all the sentences and calculate
-# the frequency of every single words using nltk.FreqDist()
+# the frequency of every single word using nltk.FreqDist()
 # len(word_freq) == 65752
 word_freq = nltk.FreqDist(itertools.chain(*tokenized_sentences))
 print("Found %d unique words tokens." % len(word_freq.items()))
@@ -69,34 +68,36 @@ y_train = np.asarray([[word_to_index[w] for w in sent[1:]] for sent in tokenized
 ############################
 # Test FORWARD PROPAGATION #
 ############################
-model_test_1 = RNNNumpy(vocabulary_size)
-o, s = model_test_1.forward_propagation(X_train[10]) # 10th training example
+model_test_forward = RNNNumpy(vocabulary_size)
+o, s = model_test_forward.forward_propagation(X_train[10]) # 10th training example
 print(o.shape) # (45, 8000)
 print(o)
 
 # Calculate a prediction by forward-propagating with the current weight values
 # even though they wouldn't be optimal
-predictions = model_test_1.predict(X_train[10])
+predictions = model_test_forward.predict(X_train[10])
 print(predictions.shape)
 print(predictions)
 
 print("Expected loss for random predictions: %f" % np.log(vocabulary_size))
-print("Actual loss: %f" % model_test_1.calculate_loss(X_train[:1000], y_train[:1000]))
+print("Actual loss: %f" % model_test_forward.calculate_loss(X_train[:1000], y_train[:1000]))
 
+#######################
+# Test GRADIENT CHECK #
+#######################
 # To avoid performing millions of expensive calculations we use a smaller vocabulary size for checking.
 grad_check_vocab_size = 100
-np.random.seed(10)
-model = RNNNumpy(grad_check_vocab_size, 10, bptt_truncate=1000)
-model.gradient_check([0,1,2,3], [1,2,3,4])
+np.random.seed(10) # re-seed the generator
+model_test_grad_check = RNNNumpy(grad_check_vocab_size, 10, bptt_truncate=1000)
+model_test_grad_check.gradient_check([0,1,2,3], [1,2,3,4])
 
 np.random.seed(10)
-model = RNNNumpy(vocabulary_size)
-
-model.numpy_sgd_step(X_train[10], y_train[10], 0.005)
+model_test_sgd_step = RNNNumpy(vocabulary_size)
+model_test_sgd_step.numpy_sgd_step(X_train[10], y_train[10], 0.005)
 
 np.random.seed(10)
 # Train on a small subset of the data to see what happens
-model = RNNNumpy(vocabulary_size)
+model_training_small = RNNNumpy(vocabulary_size)
 
 def train_with_sgd(model, X_train, y_train, learning_rate=0.005, nepoch=100, evaluate_loss_after=5):
     losses = []
@@ -110,7 +111,8 @@ def train_with_sgd(model, X_train, y_train, learning_rate=0.005, nepoch=100, eva
 
             print("%s: Loss after num_examples_seen=%d epoch=%d: %f" % (time, num_examples_seen, epoch, loss))
 
-            if (len(losses) > 1 and losses[-1][1] > [-2][1]):
+            # If the loss just got bigger in the last epoch, decrease the learning rate
+            if (len(losses) > 1 and losses[-1][1] > losses[-2][1]):
                 learning_rate = learning_rate * 0.5
                 print("Setting learning rate to %f" % learning_rate)
 
@@ -120,4 +122,4 @@ def train_with_sgd(model, X_train, y_train, learning_rate=0.005, nepoch=100, eva
             model.numpy_sgd_step(X_train[i], y_train[i], learning_rate)
             num_examples_seen += 1
 
-losses = train_with_sgd(model, X_train[:100], y_train[:100], nepoch=10, evaluate_loss_after=1)
+losses = train_with_sgd(model_training_small, X_train[:100], y_train[:100], nepoch=10, evaluate_loss_after=1)
