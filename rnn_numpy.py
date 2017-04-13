@@ -25,12 +25,15 @@ class RNNNumpy:
                         (hidden_dim, word_dim)
                     )
 
+       # V is the weight matrix for outputs
+       # V will be multiplied to the hidden state s_t
         self.V = np.random.uniform(
                         - np.sqrt(1./hidden_dim),
                         np.sqrt(1./hidden_dim),
                         (word_dim, hidden_dim)
                     )
 
+        # W is the weight matrix for the PREVIOUS hidden state s_(t-1)
         self.W = np.random.uniform(
                         - np.sqrt(1./hidden_dim),
                         np.sqrt(1./hidden_dim),
@@ -39,7 +42,9 @@ class RNNNumpy:
 
     def forward_propagation(self, x):
 
-        T = len(x) # This would be (length of the word - 1), where every one of x provides output
+        # This would be (the number of words in the sentence 'x' - 1), 
+        # where every one of x provides output
+        T = len(x)
 
         # hidden states
         # this isn't the one that gets trained; just calculated
@@ -88,9 +93,16 @@ class RNNNumpy:
             correct_word_predictions = o[
                 # we can't use ':' here because we are now cherry-picking
                 # the probability assigned to correct answers for each word slot
-                # We use integer array indexing, not slicing
+                # We use integer array indexing, not slicing,
+                # to construct a custom array, instead of having a subarray
+                # of 'o'.
                 # Check out http://cs231n.github.io/python-numpy-tutorial/
-                np.arange(len(y[t])) # From 0 to (len(y[i]) - 1) = # of words
+                # np.arange() : Return evenly spaced values within a given
+                # interval.
+                
+                # From 0 to (len(y[i]) - 1)
+                # # of words in X = # of words in Y = # of outputs
+                np.arange(len(x[t]))
                 ,y[t] # this isn't scalar; one sentence
             ]
 
@@ -106,8 +118,10 @@ class RNNNumpy:
     def calculate_loss(self, x, y):
         N = np.sum((len(y_i) for y_i in y))
 
+        # Loss averaged by total number of words in y (not the whole vocab set!)
         return self.calculate_total_loss(x, y) / N
 
+    # Back-Propagation Through Time = BPTT
     def bptt(self, x, y):
         T = len(y)
 

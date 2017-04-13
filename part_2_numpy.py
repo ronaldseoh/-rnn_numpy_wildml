@@ -4,6 +4,7 @@ import itertools
 import numpy as np
 import datetime
 import sys
+
 from rnn_numpy import RNNNumpy
 
 vocabulary_size = 8000
@@ -79,6 +80,9 @@ predictions = model_test_forward.predict(X_train[10])
 print(predictions.shape)
 print(predictions)
 
+# According to the tutorial: Since we have (vocabulary_size) words, so each word
+# should be predicted, on average, with probability 1/C, which would yield
+# a loss of L = -1/N * N * log(1/C) = log(C)
 print("Expected loss for random predictions: %f" % np.log(vocabulary_size))
 print("Actual loss: %f" % model_test_forward.calculate_loss(X_train[:1000], y_train[:1000]))
 
@@ -99,7 +103,10 @@ np.random.seed(10)
 # Train on a small subset of the data to see what happens
 model_training_small = RNNNumpy(vocabulary_size)
 
-def train_with_sgd(model, X_train, y_train, learning_rate=0.005, nepoch=100, evaluate_loss_after=5):
+def train_with_sgd(
+    model, X_train, y_train, learning_rate=0.005, nepoch=100,
+    evaluate_loss_after=5
+):
     losses = []
     num_examples_seen = 0
 
@@ -111,7 +118,8 @@ def train_with_sgd(model, X_train, y_train, learning_rate=0.005, nepoch=100, eva
 
             print("%s: Loss after num_examples_seen=%d epoch=%d: %f" % (time, num_examples_seen, epoch, loss))
 
-            # If the loss just got bigger in the last epoch, decrease the learning rate
+            # If the loss just got bigger in the last epoch, 
+            # decrease the learning rate
             if (len(losses) > 1 and losses[-1][1] > losses[-2][1]):
                 learning_rate = learning_rate * 0.5
                 print("Setting learning rate to %f" % learning_rate)
@@ -122,4 +130,8 @@ def train_with_sgd(model, X_train, y_train, learning_rate=0.005, nepoch=100, eva
             model.numpy_sgd_step(X_train[i], y_train[i], learning_rate)
             num_examples_seen += 1
 
-losses = train_with_sgd(model_training_small, X_train[:100], y_train[:100], nepoch=10, evaluate_loss_after=1)
+losses = train_with_sgd(
+            model_training_small,
+            X_train[:100], y_train[:100],
+            nepoch=10, evaluate_loss_after=1
+        )
