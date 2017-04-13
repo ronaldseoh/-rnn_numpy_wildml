@@ -42,7 +42,7 @@ class RNNNumpy:
 
     def forward_propagation(self, x):
 
-        # This would be (the number of words in the sentence 'x' - 1), 
+        # This would be (the number of words in the sentence 'x' - 1),
         # where every one of x provides output
         T = len(x)
 
@@ -99,7 +99,7 @@ class RNNNumpy:
                 # Check out http://cs231n.github.io/python-numpy-tutorial/
                 # np.arange() : Return evenly spaced values within a given
                 # interval.
-                
+
                 # From 0 to (len(y[i]) - 1)
                 # # of words in X = # of words in Y = # of outputs
                 np.arange(len(x[t]))
@@ -151,14 +151,29 @@ class RNNNumpy:
     def gradient_check(self, x, y, h=0.001, error_threshold=0.01):
         bptt_gradients = self.bptt(x, y)
 
-        model_parameters = ['U', 'V', 'W']
+        parameter_names = ['U', 'V', 'W']
 
-        for pidx, pname in enumerate(model_parameters):
-            parameter = operator.attrgetter(pname)(self)
+        # enumerate provides serial numbers to each object out of iterables
+        for index, parameter in enumerate(parameter_names):
+            # Gets the attribute 'pname' from self,
+            # which would be a RNNNumpy instance
+            current_parameter = operator.attrgetter(pname)(self)
 
-            print("Performing gradient check for parameter %s with size %d." % (pname, np.prod(parameter.shape)))
+            print("Performing gradient check for parameter %s with size %d."
+                    % (pname, np.prod(current_parameter.shape))
+            )
 
-            it = np.nditer(parameter, flags=['multi_index'], op_flags=['readwrite'])
+            # np.nditer(): Efficient multi-dimensional iterator object
+            # to iterate over arrays.
+            it = np.nditer(
+                    current_parameter,
+                    # Flags to control the behavior of the iterator
+                    flags=['multi_index'], # a tuple of indices
+                    # This is a list of flags for each operand.
+                    # At minimum, one of “readonly”, “readwrite”,
+                    # or “writeonly” must be specified.
+                    op_flags=['readwrite']
+                )
 
             while not it.finished:
                 ix = it.multi_index
