@@ -140,7 +140,7 @@ class RNNNumpy:
 
             delta_t = self.V.T.dot(delta_o[t]) * (1 - (s[t] ** 2))
 
-            for bptt_step in np.arange(max(0, t-self.bptt_truncate), t+1)[::1]:
+            for bptt_step in np.arange(max(0, t-self.bptt_truncate), t+1)[::-1]:
                 dLdW += np.outer(delta_t, s[bptt_step - 1])
                 dLdU[:, x[bptt_step]] += delta_t
 
@@ -154,13 +154,13 @@ class RNNNumpy:
         parameter_names = ['U', 'V', 'W']
 
         # enumerate provides serial numbers to each object out of iterables
-        for index, parameter in enumerate(parameter_names):
+        for index, param_name in enumerate(parameter_names):
             # Gets the attribute 'pname' from self,
             # which would be a RNNNumpy instance
-            current_parameter = operator.attrgetter(pname)(self)
+            current_parameter = operator.attrgetter(param_name)(self)
 
             print("Performing gradient check for parameter %s with size %d."
-                    % (pname, np.prod(current_parameter.shape))
+                    % (param_name, np.prod(current_parameter.shape))
             )
 
             # np.nditer(): Efficient multi-dimensional iterator object
@@ -178,23 +178,31 @@ class RNNNumpy:
             while not it.finished:
                 ix = it.multi_index
 
-                original_value = parameter[ix]
+                # Temporaily change the parameters to calculate
+                # the estimated gradient
+                original_value = current_parameter[ix]
 
-                parameter[ix] = original_value + h
-                gradplus = self.calculate_total_loss([x], [y])
-                parameter[ix] = original_value - h
-                gradminus = self.calculate_total_loss([x], [y])
+                current_parameter[ix] = original_value + h
+                loss_plus = self.calculate_total_loss([x], [y])
 
-                estimated_gradient = (gradplus - gradminus)/(2*h)
+                current_parameter[ix] = original_value - h
+                loss_minus = self.calculate_total_loss([x], [y])
 
-                parameter[ix] = original_value
+                estimated_gradient = (loss_plus - loss_minus) / (2 * h)
 
-                backprop_gradient = bptt_gradients[pidx][ix]
+                # Back to original value
+                current_parameter[ix] = original_value
 
-                relative_error = np.abs(backprop_gradient - estimated_gradient) / (np.abs(backprop_gradient) + np.abs(estimated_gradient))
+                # Get the actual gradient values from bptt
+                backprop_gradient = bptt_gradients[index][ix]
 
+                relative_error = np.abs(backprop_gradient-estimated_gradient) \
+                / (np.abs(backprop_gradient) + np.abs(estimated_gradient))
+
+                # If the error between estimated_gradient and backprop_gradient
+                # is too large, print the details
                 if relative_error > error_threshold:
-                    print("Gradient Check ERROR: parameter=%s ix=%s" % (pname, ix))
+                    print("GRADIENT CHECK ERROR: parameter=%s ix=%s" % (param_name, ix))
                     print("+h Loss: %f" % gradplus)
                     print("-h Loss: %f" % gradminus)
                     print("Estimated_gradient: %f" % estimated_gradient)
@@ -204,11 +212,12 @@ class RNNNumpy:
 
                 it.iternext()
 
-            print("Gradient check for parameter %s passed." % (pname))
+            print("Gradient check for parameter %s passed." % (param_name))
 
     def numpy_sgd_step(self, x, y, learning_rate):
         dLdU, dLdV, dLdW = self.bptt(x, y)
 
+        # Learning rate is adjustable between the steps!
         self.U -= learning_rate * dLdU
         self.V -= learning_rate * dLdV
         self.W -= learning_rate * dLdW

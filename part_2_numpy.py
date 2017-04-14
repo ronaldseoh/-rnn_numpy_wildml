@@ -89,7 +89,8 @@ print("Actual loss: %f" % model_test_forward.calculate_loss(X_train[:1000], y_tr
 #######################
 # Test GRADIENT CHECK #
 #######################
-# To avoid performing millions of expensive calculations we use a smaller vocabulary size for checking.
+# To avoid performing millions of expensive calculations we use
+# a smaller vocabulary size for checking.
 grad_check_vocab_size = 100
 np.random.seed(10) # re-seed the generator
 model_test_grad_check = RNNNumpy(grad_check_vocab_size, 10, bptt_truncate=1000)
@@ -118,7 +119,7 @@ def train_with_sgd(
 
             print("%s: Loss after num_examples_seen=%d epoch=%d: %f" % (time, num_examples_seen, epoch, loss))
 
-            # If the loss just got bigger in the last epoch, 
+            # If the loss just got bigger in the last epoch,
             # decrease the learning rate
             if (len(losses) > 1 and losses[-1][1] > losses[-2][1]):
                 learning_rate = learning_rate * 0.5
