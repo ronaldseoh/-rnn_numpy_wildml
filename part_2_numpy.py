@@ -112,12 +112,16 @@ def train_with_sgd(
     num_examples_seen = 0
 
     for epoch in range(nepoch):
+        # After 'evalulate_loss_after' number of steps,
+        # check the amount of loss and adjust the learning rate if needed
         if (epoch % evaluate_loss_after == 0):
             loss = model.calculate_loss(X_train, y_train)
             losses.append((num_examples_seen, loss))
             time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%s')
 
-            print("%s: Loss after num_examples_seen=%d epoch=%d: %f" % (time, num_examples_seen, epoch, loss))
+            print("%s: Loss after num_examples_seen=%d epoch=%d: %f" 
+                    % (time, num_examples_seen, epoch, loss)
+            )
 
             # If the loss just got bigger in the last epoch,
             # decrease the learning rate
@@ -127,6 +131,7 @@ def train_with_sgd(
 
             sys.stdout.flush()
 
+        # Train the model with the training data
         for i in range(len(y_train)):
             model.numpy_sgd_step(X_train[i], y_train[i], learning_rate)
             num_examples_seen += 1
