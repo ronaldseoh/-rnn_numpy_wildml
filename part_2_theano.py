@@ -5,7 +5,7 @@ import numpy as np
 import datetime
 import sys
 
-from rnn_numpy import RNNNumpy
+from rnn_theano import RNNTheano
 
 vocabulary_size = 8000
 unknown_token = "UNKNOWN_TOKEN"
@@ -69,7 +69,7 @@ y_train = np.asarray([[word_to_index[w] for w in sent[1:]] for sent in tokenized
 ############################
 # Test FORWARD PROPAGATION #
 ############################
-model_test_forward = RNNNumpy(vocabulary_size)
+model_test_forward = RNNTheano(vocabulary_size)
 o, s = model_test_forward.forward_propagation(X_train[10]) # 10th training example
 print(o.shape) # (45, 8000)
 print(o)
@@ -93,16 +93,16 @@ print("Actual loss: %f" % model_test_forward.calculate_loss(X_train[:1000], y_tr
 # a smaller vocabulary size for checking.
 grad_check_vocab_size = 100
 np.random.seed(10) # re-seed the generator
-model_test_grad_check = RNNNumpy(grad_check_vocab_size, 10, bptt_truncate=1000)
+model_test_grad_check = RNNTheano(grad_check_vocab_size, 10, bptt_truncate=1000)
 model_test_grad_check.gradient_check([0,1,2,3], [1,2,3,4])
 
 np.random.seed(10)
-model_test_sgd_step = RNNNumpy(vocabulary_size)
-model_test_sgd_step.numpy_sgd_step(X_train[10], y_train[10], 0.005)
+model_test_sgd_step = RNNTheano(vocabulary_size)
+model_test_sgd_step.sgd_step(X_train[10], y_train[10], 0.005)
 
 np.random.seed(10)
 # Train on a small subset of the data to see what happens
-model_training_small = RNNNumpy(vocabulary_size)
+model_training_small = RNNTheano(vocabulary_size)
 
 def train_with_sgd(
     model, X_train, y_train, learning_rate=0.005, nepoch=100,
@@ -133,7 +133,7 @@ def train_with_sgd(
 
         # Train the model with the training data
         for i in range(len(y_train)):
-            model.numpy_sgd_step(X_train[i], y_train[i], learning_rate)
+            model.sgd_step(X_train[i], y_train[i], learning_rate)
             num_examples_seen += 1
 
 losses = train_with_sgd(

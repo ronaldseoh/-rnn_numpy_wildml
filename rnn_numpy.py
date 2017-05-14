@@ -1,11 +1,6 @@
 import numpy as np
 import operator
-
-def softmax(y):
-
-    e = np.exp(np.array(y))
-
-    return (e/np.sum(e))
+from utils import softmax
 
 class RNNNumpy:
 
@@ -132,10 +127,9 @@ class RNNNumpy:
         dLdW = np.zeros(self.W.shape)
 
         delta_o = o
-
         delta_o[np.arange(len(y)), y] -= 1.
 
-        for t in np.arange(T)[::1]:
+        for t in np.arange(T)[::1]: # get items by index incremented by 1
             dLdV += np.outer(delta_o[t], s[t].T)
 
             delta_t = self.V.T.dot(delta_o[t]) * (1 - (s[t] ** 2))
