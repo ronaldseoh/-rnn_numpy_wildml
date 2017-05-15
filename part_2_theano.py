@@ -6,6 +6,7 @@ import datetime
 import sys
 
 from rnn_theano import RNNTheano
+from utils import load_model_parameters_theano, save_model_parameters_theano
 
 vocabulary_size = 8000
 unknown_token = "UNKNOWN_TOKEN"
@@ -66,81 +67,8 @@ X_train = np.asarray([[word_to_index[w] for w in sent[:-1]] for sent in tokenize
 # y_train - every words except for the first one
 y_train = np.asarray([[word_to_index[w] for w in sent[1:]] for sent in tokenized_sentences])
 
-############################
-# Test FORWARD PROPAGATION #
-############################
-model_test_forward = RNNTheano(vocabulary_size)
-o, s = model_test_forward.forward_propagation(X_train[10]) # 10th training example
-print(o.shape) # (45, 8000)
-print(o)
-
-# Calculate a prediction by forward-propagating with the current weight values
-# even though they wouldn't be optimal
-predictions = model_test_forward.predict(X_train[10])
-print(predictions.shape)
-print(predictions)
-
-# According to the tutorial: Since we have (vocabulary_size) words, so each word
-# should be predicted, on average, with probability 1/C, which would yield
-# a loss of L = -1/N * N * log(1/C) = log(C)
-print("Expected loss for random predictions: %f" % np.log(vocabulary_size))
-print("Actual loss: %f" % model_test_forward.calculate_loss(X_train[:1000], y_train[:1000]))
-
-#######################
-# Test GRADIENT CHECK #
-#######################
-# To avoid performing millions of expensive calculations we use
-# a smaller vocabulary size for checking.
-grad_check_vocab_size = 100
-np.random.seed(10) # re-seed the generator
-model_test_grad_check = RNNTheano(grad_check_vocab_size, 10, bptt_truncate=1000)
-model_test_grad_check.gradient_check([0,1,2,3], [1,2,3,4])
-
-np.random.seed(10)
-model_test_sgd_step = RNNTheano(vocabulary_size)
-model_test_sgd_step.sgd_step(X_train[10], y_train[10], 0.005)
-
-np.random.seed(10)
-# Train on a small subset of the data to see what happens
-model_training_small = RNNTheano(vocabulary_size)
-
-def train_with_sgd(
-    model, X_train, y_train, learning_rate=0.005, nepoch=100,
-    evaluate_loss_after=5
-):
-    losses = []
-    num_examples_seen = 0
-
-    for epoch in range(nepoch):
-        # After 'evalulate_loss_after' number of steps,
-        # check the amount of loss and adjust the learning rate if needed
-        if (epoch % evaluate_loss_after == 0):
-            loss = model.calculate_loss(X_train, y_train)
-            losses.append((num_examples_seen, loss))
-            time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%s')
-
-            print("%s: Loss after num_examples_seen=%d epoch=%d: %f" 
-                    % (time, num_examples_seen, epoch, loss)
-            )
-
-            # If the loss just got bigger in the last epoch,
-            # decrease the learning rate
-            if (len(losses) > 1 and losses[-1][1] > losses[-2][1]):
-                learning_rate = learning_rate * 0.5
-                print("Setting learning rate to %f" % learning_rate)
-
-            sys.stdout.flush()
-
-        # Train the model with the training data
-        for i in range(len(y_train)):
-            model.sgd_step(X_train[i], y_train[i], learning_rate)
-            num_examples_seen += 1
-
-losses = train_with_sgd(
-            model_training_small,
-            X_train[:100], y_train[:100],
-            nepoch=10, evaluate_loss_after=1
-        )
+model = RNNTheano(vocabulary_size, hidden_dim=50)
+load_model_parameters_theano('./trained-model-theano.npz', model)
 
 def generate_sentence(model):
     # We start the sentence with the start token
