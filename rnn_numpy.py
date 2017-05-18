@@ -208,7 +208,7 @@ class RNNNumpy:
 
             print("Gradient check for parameter %s passed." % (param_name))
 
-    def numpy_sgd_step(self, x, y, learning_rate):
+    def sgd_step(self, x, y, learning_rate):
         dLdU, dLdV, dLdW = self.bptt(x, y)
 
         # Learning rate is adjustable between the steps!
