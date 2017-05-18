@@ -136,9 +136,17 @@ def train_with_sgd(
             model.numpy_sgd_step(X_train[i], y_train[i], learning_rate)
             num_examples_seen += 1
 
-losses = train_with_sgd(
+losses_training_small = train_with_sgd(
             model_training_small,
             X_train[:100], y_train[:100],
+            nepoch=10, evaluate_loss_after=1
+        )
+
+model = RNNNumpy(vocabulary_size)
+
+losses = train_with_sgd(
+            model,
+            X_train[:1000], y_train[:1000],
             nepoch=10, evaluate_loss_after=1
         )
 
