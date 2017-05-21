@@ -159,14 +159,14 @@ def train_with_sgd(
             model.sgd_step(X_train[i], y_train[i], learning_rate)
             num_examples_seen += 1
 
+    return losses
+
 # Perform the training
 losses_training_small = train_with_sgd(
             model_training_small,
             X_train[:100], y_train[:100],
             nepoch=10, evaluate_loss_after=1
         )
-
-    return losses
 
 print("#####################################")
 print("# Test TRAINING on a bigger dataset #")
@@ -191,12 +191,12 @@ def generate_sentence(model):
 
     # Repeat until we get an end token
     while not new_sentence[-1] == word_to_index[sentence_end_token]:
-        next_word_probs = model.forward_propagation(new_sentence)
+        next_word_probs, hidden_state = model.forward_propagation(new_sentence)
         sampled_word = word_to_index[unknown_token]
 
         # We don't want to sample unknown words
         while sampled_word == word_to_index[unknown_token]:
-            samples = np.random.multinomial(1, next_word_probs[-1])
+            samples = np.random.multinomial(n=1, pvals=next_word_probs[0])
             sampled_word = np.argmax(samples)
             new_sentence.append(sampled_word)
 
