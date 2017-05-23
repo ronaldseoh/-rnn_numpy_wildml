@@ -105,12 +105,16 @@ np.random.seed(10) # re-seed the generator
 model_test_grad_check = RNNNumpy(grad_check_vocab_size, 10, bptt_truncate=1000)
 model_test_grad_check.gradient_check([0,1,2,3], [1,2,3,4])
 
+print()
+
 print("##########################")
 print("# Test a single SGD STEP #")
 print("##########################")
 np.random.seed(10)
 model_test_sgd_step = RNNNumpy(vocabulary_size)
 model_test_sgd_step.sgd_step(X_train[10], y_train[10], 0.005)
+
+print()
 
 # Train on a small subset of the data to see what happens
 print("####################################")
@@ -167,6 +171,8 @@ losses_training_small = train_with_sgd(
             X_train[:100], y_train[:100],
             nepoch=10, evaluate_loss_after=1
         )
+
+print()
 
 print("#####################################")
 print("# Test TRAINING on a bigger dataset #")
